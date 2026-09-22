@@ -1,0 +1,16 @@
+[project]
+name = "planets-intel"
+version = "0.0.0"
+description = "Starting-roster report for one Planets game, as a self-contained HTML file."
+requires-python = ">=3.14,<3.15"
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
