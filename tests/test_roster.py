@@ -42,22 +42,31 @@ def test_league_team_and_active_items():
             2: [{"id": 11, "raceid": 1}],
         },
         officer_details={
-            10: {"id": 10, "activehulls": "15,14,", "activeadvantages": "25,"},
+            10: {"id": 10, "activehulls": "15,14,", "activeadvantages": "25,30,"},
         },
         hulls={
             14: {"id": 14, "name": "Neutronic Fuel Carrier", "beams": 0},
             15: {"id": 15, "name": "Large Deep Space Freighter", "beams": 0},
         },
-        advantages={25: {"id": 25, "name": "Build Fighters"}},
+        advantages={
+            25: {"id": 25, "name": "Build Fighters"},
+            30: {"id": 30, "name": "alchemy"},
+        },
     )
     by_slot = {player["slot"]: player for player in report["players"]}
     assert report["game"]["name"] == "Honda Sector"
     assert report["game"]["type"] == "Epic"
     assert by_slot[2]["team"] == "RISK"
     assert by_slot[2]["officer_id"] == 10
-    assert [hull["id"] for hull in by_slot[2]["hulls"]] == [14, 15]
-    assert by_slot[2]["hulls"][0]["icon"] == "https://mobile.planets.nu/img/hulls/14.png"
-    assert by_slot[2]["advantages"][0]["name"] == "Build Fighters"
+    assert [hull["name"] for hull in by_slot[2]["hulls"]] == [
+        "Large Deep Space Freighter",
+        "Neutronic Fuel Carrier",
+    ]
+    assert by_slot[2]["hulls"][0]["icon"] == "https://mobile.planets.nu/img/hulls/15.png"
+    assert [item["name"] for item in by_slot[2]["advantages"]] == [
+        "alchemy",
+        "Build Fighters",
+    ]
     assert by_slot[7]["team"] is None
     assert by_slot[7]["officer_id"] is None
     assert by_slot[7]["hulls"] == []

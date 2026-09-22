@@ -99,7 +99,7 @@ def _active_items(csv: str | None, catalog: dict[int, dict], icon_for) -> list[d
                 "icon": icon_for(record),
             }
         )
-    items.sort(key=lambda item: item["id"])
+    items.sort(key=lambda item: item["name"].casefold())
     return items
 
 
