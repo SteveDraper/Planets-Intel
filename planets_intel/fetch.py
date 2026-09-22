@@ -7,6 +7,7 @@ import urllib.parse
 import urllib.request
 
 from planets_intel.errors import RosterError
+from planets_intel.progress import note
 from planets_intel.roster import build_roster
 from planets_intel.starters import select_starters
 
@@ -14,6 +15,7 @@ API = "http://api.planets.nu"
 
 
 def fetch_roster(game_id: int) -> dict:
+    note("game load")
     loadinfo = get_json("/game/loadinfo", {"gameid": game_id})
     static = get_json("/static/all", {})
     hulls = {hull["id"]: hull for hull in static["hulls"]}
@@ -23,11 +25,15 @@ def fetch_roster(game_id: int) -> dict:
     accounts: dict[str, dict] = {}
     officers_by_account: dict[int, list[dict]] = {}
     officer_details: dict[int, dict] = {}
-    for starter in starters:
+    total = len(starters)
+    for index, starter in enumerate(starters, start=1):
+        step = f"{index}/{total} {starter['name']}"
+        note(f"{step}: profile")
         profile = get_json("/account/loadprofile", {"username": starter["name"]})
         _require_success(profile, f"account {starter['name']}")
         accounts[starter["name"]] = profile
         account_id = profile["account"]["id"]
+        note(f"{step}: officers")
         if account_id not in officers_by_account:
             officers_payload = get_json("/account/officers", {"accountid": account_id})
             _require_success(officers_payload, f"officers for account {account_id}")
@@ -36,10 +42,12 @@ def fetch_roster(game_id: int) -> dict:
             officers_by_account[account_id],
             starter["raceid"],
         )
+        note(f"{step}: hulls")
         if officer is not None and officer["id"] not in officer_details:
             detail = get_json("/account/loadofficer", {"officerid": officer["id"]})
             _require_success(detail, f"officer {officer['id']}")
             officer_details[officer["id"]] = detail["officer"]
+        note(f"{step}: advantages")
     return build_roster(
         loadinfo,
         accounts,

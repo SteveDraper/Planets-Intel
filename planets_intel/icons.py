@@ -5,21 +5,35 @@ import json
 import urllib.error
 import urllib.request
 
+from planets_intel.progress import note
+
 
 def embed_icons(report: dict) -> dict:
     """Return a copy whose icon fields are data URIs, or null when a fetch fails."""
     copied = json.loads(json.dumps(report))
+    urls: list[str] = []
+    seen: set[str] = set()
+    for player in copied["players"]:
+        for kind in ("hulls", "advantages"):
+            for item in player[kind]:
+                url = item.get("icon")
+                if isinstance(url, str) and url and url not in seen:
+                    seen.add(url)
+                    urls.append(url)
     cache: dict[str, str | None] = {}
+    if not urls:
+        note("icons")
+    for index, url in enumerate(urls, start=1):
+        note(f"icons {index}/{len(urls)}")
+        cache[url] = _data_uri(url)
     for player in copied["players"]:
         for kind in ("hulls", "advantages"):
             for item in player[kind]:
                 url = item.get("icon")
                 if not isinstance(url, str) or not url:
                     item["icon"] = None
-                    continue
-                if url not in cache:
-                    cache[url] = _data_uri(url)
-                item["icon"] = cache[url]
+                else:
+                    item["icon"] = cache[url]
     return copied
 
 
