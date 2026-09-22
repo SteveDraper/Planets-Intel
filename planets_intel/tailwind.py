@@ -47,7 +47,7 @@ def compile_css() -> str:
         raise SystemExit(result.stderr or "Tailwind compile failed")
     css = compiled.read_text(encoding="utf-8")
     compiled.unlink(missing_ok=True)
-    if ".min-h-screen" not in css or ".underline-offset-4" not in css:
+    if ".min-h-screen" not in css or "#00ffff" not in css:
         raise SystemExit("Tailwind compile did not include the report utilities.")
     return css
 

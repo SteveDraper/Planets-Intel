@@ -26,10 +26,10 @@ def render_roster_html(report: dict, css: str) -> str:
   <title>{html.escape(title)}</title>
   <style>{css}</style>
 </head>
-<body class="min-h-screen bg-stone-50 text-stone-900 antialiased">
-  <header class="border-b border-stone-200 bg-white">
+<body class="min-h-screen bg-black font-sans text-white antialiased">
+  <header class="border-b border-[#222] bg-[rgb(34,40,40)]">
     <div class="mx-auto max-w-5xl px-4 py-3">
-      <p class="text-sm font-semibold tracking-tight">Planets Intel</p>
+      <p class="text-sm uppercase tracking-wide text-[rgba(200,200,200,0.75)]">Planets Intel</p>
     </div>
   </header>
   <main>
@@ -58,15 +58,15 @@ def _title(game: dict) -> str:
 def _home(title: str, players: list[dict]) -> str:
     rows = "\n".join(_player_row(player) for player in players)
     return f"""    <section id="home" data-viewport="home" aria-label="Roster" class="mx-auto w-full max-w-5xl px-4 py-6">
-      <h1 class="text-lg font-semibold tracking-tight">{html.escape(title)}</h1>
-      <p class="mt-4"><a href="#teams" class="text-sm font-medium text-stone-700 underline underline-offset-4">Team summary</a></p>
-      <div class="mt-4 overflow-hidden rounded-lg border border-stone-200 bg-white">
+      <h1 class="text-[17px] font-normal text-[#cceeee]">{html.escape(title)}</h1>
+      <p class="mt-4"><a href="#teams" class="text-sm text-[#00ffff] no-underline">Team summary</a></p>
+      <div class="mt-4 overflow-hidden rounded-[5px] bg-[linear-gradient(to_bottom,rgb(52,60,60),rgb(26,30,30))] shadow-[0_2px_3px_0_rgba(0,0,0,0.75)]">
         <table id="roster" class="w-full border-collapse text-left text-sm">
-          <thead class="border-b border-stone-200 bg-stone-50">
+          <thead class="bg-[rgb(34,40,40)] text-[rgba(200,200,200,0.75)]">
             <tr>
-              <th class="px-3 py-2 font-medium" scope="col"><button type="button" data-sort="0" class="cursor-pointer font-medium">Name</button></th>
-              <th class="px-3 py-2 font-medium" scope="col"><button type="button" data-sort="1" class="cursor-pointer font-medium">Race</button></th>
-              <th class="px-3 py-2 font-medium" scope="col"><button type="button" data-sort="2" class="cursor-pointer font-medium">League team</button></th>
+              <th class="px-5 py-2.5 font-normal uppercase" scope="col"><button type="button" data-sort="0" class="cursor-pointer font-normal uppercase">Name</button></th>
+              <th class="px-5 py-2.5 font-normal uppercase" scope="col"><button type="button" data-sort="1" class="cursor-pointer font-normal uppercase">Race</button></th>
+              <th class="px-5 py-2.5 font-normal uppercase" scope="col"><button type="button" data-sort="2" class="cursor-pointer font-normal uppercase">League team</button></th>
             </tr>
           </thead>
           <tbody>
@@ -80,10 +80,10 @@ def _home(title: str, players: list[dict]) -> str:
 def _player_row(player: dict) -> str:
     slot = player["slot"]
     team = _team_text(player["team"])
-    return f"""            <tr class="border-t border-stone-200">
-              <td class="px-3 py-2">{html.escape(player["name"])}</td>
-              <td class="px-3 py-2"><a href="#player-{slot}" class="text-stone-700 underline underline-offset-4">{html.escape(player["race"])}</a></td>
-              <td class="px-3 py-2">{html.escape(team)}</td>
+    return f"""            <tr class="border-b border-[#222] hover:bg-[linear-gradient(to_bottom,rgba(64,80,80,0.25),rgba(34,40,40,0.25))]">
+              <td class="px-5 py-3">{html.escape(player["name"])}</td>
+              <td class="px-5 py-3"><a href="#player-{slot}" class="text-[#00ffff] no-underline">{html.escape(player["race"])}</a></td>
+              <td class="px-5 py-3">{html.escape(team)}</td>
             </tr>"""
 
 
@@ -96,8 +96,8 @@ def _teams(players: list[dict]) -> str:
         names.append(_NONE)
     sections = "\n".join(_team_section(name, grouped[name]) for name in names)
     return f"""    <section id="teams" data-viewport="teams" aria-label="Team summary" hidden class="mx-auto w-full max-w-5xl px-4 py-6">
-      <p><a href="#home" class="text-sm font-medium text-stone-700 underline underline-offset-4">Back</a></p>
-      <h1 class="mt-4 text-lg font-semibold tracking-tight">Team summary</h1>
+      <p><a href="#home" class="text-sm text-[#00ffff] no-underline">Back</a></p>
+      <h1 class="mt-4 text-[17px] font-normal text-[#cceeee]">Team summary</h1>
       <div class="mt-4 grid gap-4">
 {sections}
       </div>
@@ -107,14 +107,14 @@ def _teams(players: list[dict]) -> str:
 def _team_section(name: str, players: list[dict]) -> str:
     ordered = sorted(players, key=lambda player: player["name"].casefold())
     rows = "\n".join(
-        f"""              <tr class="border-t border-stone-200">
-                <td class="px-3 py-2">{html.escape(player["name"])}</td>
-                <td class="px-3 py-2">{html.escape(player["race"])}</td>
+        f"""              <tr class="border-b border-[#222]">
+                <td class="px-5 py-3">{html.escape(player["name"])}</td>
+                <td class="px-5 py-3 text-[#00ffff]">{html.escape(player["race"])}</td>
               </tr>"""
         for player in ordered
     )
-    return f"""        <section class="overflow-hidden rounded-lg border border-stone-200 bg-white">
-          <h2 class="border-b border-stone-200 px-3 py-2 text-sm font-semibold">{html.escape(name)}</h2>
+    return f"""        <section class="overflow-hidden rounded-[5px] bg-[linear-gradient(to_bottom,rgb(52,60,60),rgb(26,30,30))] shadow-[0_2px_3px_0_rgba(0,0,0,0.75)]">
+          <h2 class="bg-[rgb(34,40,40)] px-2.5 py-2.5 text-sm uppercase text-[rgba(200,200,200,0.75)]">{html.escape(name)}</h2>
           <table class="w-full border-collapse text-left text-sm">
             <tbody>
 {rows}
@@ -127,8 +127,8 @@ def _detail(player: dict) -> str:
     slot = player["slot"]
     heading = f"{player['name']} ({player['race']})"
     return f"""    <section id="player-{slot}" data-viewport="detail" aria-label="{html.escape(player["name"], quote=True)}" hidden class="mx-auto w-full max-w-5xl px-4 py-6">
-      <p><a href="#home" class="text-sm font-medium text-stone-700 underline underline-offset-4">Back</a></p>
-      <h1 class="mt-4 text-lg font-semibold tracking-tight">{html.escape(heading)}</h1>
+      <p><a href="#home" class="text-sm text-[#00ffff] no-underline">Back</a></p>
+      <h1 class="mt-4 text-[17px] font-normal text-[#cceeee]">{html.escape(heading)}</h1>
       <div class="mt-4 grid gap-4">
         {_item_table("Hulls", player["hulls"])}
         {_item_table("Advantages", player["advantages"])}
@@ -138,9 +138,9 @@ def _detail(player: dict) -> str:
 
 def _item_table(caption: str, items: list[dict]) -> str:
     rows = "\n".join(_item_row(item) for item in items)
-    return f"""        <div class="overflow-hidden rounded-lg border border-stone-200 bg-white">
+    return f"""        <div class="overflow-hidden rounded-[5px] bg-[linear-gradient(to_bottom,rgb(52,60,60),rgb(26,30,30))] shadow-[0_2px_3px_0_rgba(0,0,0,0.75)]">
           <table class="w-full border-collapse text-left text-sm">
-            <caption class="border-b border-stone-200 px-3 py-2 text-left text-sm font-semibold">{html.escape(caption)}</caption>
+            <caption class="bg-[rgb(34,40,40)] px-2.5 py-2.5 text-left text-sm uppercase text-[rgba(200,200,200,0.75)]">{html.escape(caption)}</caption>
             <tbody>
 {rows}
             </tbody>
@@ -154,10 +154,10 @@ def _item_row(item: dict) -> str:
     if isinstance(icon, str) and icon.startswith("data:"):
         image = (
             f'<img src="{html.escape(icon, quote=True)}" alt="" '
-            'class="h-8 w-8 object-contain">'
+            'class="mr-2.5 h-[60px] w-[60px] rounded-[5px] bg-black object-contain">'
         )
-    return f"""              <tr class="border-t border-stone-200">
-                <td class="px-3 py-2">{image}{html.escape(item["name"])}</td>
+    return f"""              <tr class="border-b border-[#222] hover:bg-[linear-gradient(to_bottom,rgba(64,80,80,0.25),rgba(34,40,40,0.25))]">
+                <td class="px-5 py-3"><span class="flex items-center">{image}<b class="font-normal text-[#00ffff]">{html.escape(item["name"])}</b></span></td>
               </tr>"""
 
 
