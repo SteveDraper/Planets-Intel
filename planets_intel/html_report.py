@@ -131,17 +131,33 @@ def _detail(player: dict) -> str:
       <h1 class="mt-4 text-[17px] font-normal text-[#cceeee]">{html.escape(heading)}</h1>
       <p class="mt-4 text-sm text-[rgba(200,200,200,0.75)]">Campaign points used <b class="font-normal text-[#00ffff]">{player["campaign_points"]}</b></p>
       <div class="mt-4 grid gap-4">
-        {_item_table("Hulls", player["hulls"])}
+        {_item_table("Hulls", player["hulls"], hull_sort=True)}
         {_item_table("Advantages", player["advantages"])}
       </div>
     </section>"""
 
 
-def _item_table(caption: str, items: list[dict]) -> str:
-    rows = "\n".join(_item_row(item) for item in items)
+_CAPTION = (
+    "bg-[rgb(34,40,40)] px-2.5 py-2.5 text-left text-sm uppercase "
+    "text-[rgba(200,200,200,0.75)]"
+)
+_HULL_SORT_BUTTON = (
+    "cursor-pointer font-normal uppercase text-[rgba(200,200,200,0.75)] "
+    "aria-pressed:text-[#00ffff]"
+)
+
+
+def _item_table(caption: str, items: list[dict], hull_sort: bool = False) -> str:
+    rows = "\n".join(_item_row(item, hull_sort) for item in items)
+    table_attr = " data-hull-table" if hull_sort else ""
+    caption_class = _CAPTION
+    caption_body = html.escape(caption)
+    if hull_sort:
+        caption_class += " flex items-center justify-between"
+        caption_body = f"<span>{caption_body}</span>{_hull_sort_control()}"
     return f"""        <div class="overflow-hidden rounded-[5px] bg-[linear-gradient(to_bottom,rgb(52,60,60),rgb(26,30,30))] shadow-[0_2px_3px_0_rgba(0,0,0,0.75)]">
-          <table class="w-full border-collapse text-left text-sm">
-            <caption class="bg-[rgb(34,40,40)] px-2.5 py-2.5 text-left text-sm uppercase text-[rgba(200,200,200,0.75)]">{html.escape(caption)}</caption>
+          <table{table_attr} class="w-full border-collapse text-left text-sm">
+            <caption class="{caption_class}">{caption_body}</caption>
             <tbody>
 {rows}
             </tbody>
@@ -149,7 +165,33 @@ def _item_table(caption: str, items: list[dict]) -> str:
         </div>"""
 
 
-def _item_row(item: dict) -> str:
+def _hull_sort_control() -> str:
+    return f"""<span class="flex items-center gap-6">
+              <span class="flex gap-3">
+                <button type="button" data-hull-sort="name" aria-pressed="true" class="{_HULL_SORT_BUTTON}">Name</button>
+                <button type="button" data-hull-sort="techlevel" aria-pressed="false" class="{_HULL_SORT_BUTTON}">Tech level</button>
+              </span>
+              <span class="flex gap-3">
+                <button type="button" data-hull-dir="asc" aria-pressed="true" aria-label="Ascending" class="{_HULL_SORT_BUTTON} inline-flex items-center">{_arrow_icon("up")}</button>
+                <button type="button" data-hull-dir="desc" aria-pressed="false" aria-label="Descending" class="{_HULL_SORT_BUTTON} inline-flex items-center">{_arrow_icon("down")}</button>
+              </span>
+            </span>"""
+
+
+def _arrow_icon(direction: str) -> str:
+    path = {
+        "up": "M8 13V3M4.5 6.5 8 3l3.5 3.5",
+        "down": "M8 3v10M4.5 9.5 8 13l3.5-3.5",
+    }[direction]
+    return (
+        '<svg viewBox="0 0 16 16" aria-hidden="true" class="h-4 w-4" fill="none" '
+        'stroke="currentColor" stroke-width="1.5" stroke-linecap="round" '
+        'stroke-linejoin="round">'
+        f'<path d="{path}"/></svg>'
+    )
+
+
+def _item_row(item: dict, hull_sort: bool = False) -> str:
     icon = item.get("icon")
     image = ""
     if isinstance(icon, str) and icon.startswith("data:"):
@@ -157,7 +199,12 @@ def _item_row(item: dict) -> str:
             f'<img src="{html.escape(icon, quote=True)}" alt="" '
             'class="mr-2.5 h-[60px] w-[60px] rounded-[5px] bg-black object-contain">'
         )
-    return f"""              <tr class="border-b border-[#222] hover:bg-[linear-gradient(to_bottom,rgba(64,80,80,0.25),rgba(34,40,40,0.25))]">
+    attrs = ""
+    if hull_sort:
+        name = html.escape(item["name"], quote=True)
+        level = html.escape(str(item["techlevel"]), quote=True)
+        attrs = f' data-name="{name}" data-techlevel="{level}"'
+    return f"""              <tr{attrs} class="border-b border-[#222] hover:bg-[linear-gradient(to_bottom,rgba(64,80,80,0.25),rgba(34,40,40,0.25))]">
                 <td class="px-5 py-3"><span class="flex items-center">{image}<b class="font-normal text-[#00ffff]">{html.escape(item["name"])}</b></span></td>
               </tr>"""
 
@@ -195,25 +242,81 @@ _SCRIPT = """
       showFromHash();
 
       var roster = document.getElementById("roster");
-      if (!roster) return;
-      var tbody = roster.querySelector("tbody");
-      roster.querySelectorAll("button[data-sort]").forEach(function (button) {
-        button.addEventListener("click", function () {
-          var index = Number(button.getAttribute("data-sort"));
-          var next = button.getAttribute("data-dir") === "asc" ? "desc" : "asc";
-          roster.querySelectorAll("button[data-sort]").forEach(function (other) {
-            other.removeAttribute("data-dir");
+      if (roster) {
+        var tbody = roster.querySelector("tbody");
+        roster.querySelectorAll("button[data-sort]").forEach(function (button) {
+          button.addEventListener("click", function () {
+            var index = Number(button.getAttribute("data-sort"));
+            var next = button.getAttribute("data-dir") === "asc" ? "desc" : "asc";
+            roster.querySelectorAll("button[data-sort]").forEach(function (other) {
+              other.removeAttribute("data-dir");
+            });
+            button.setAttribute("data-dir", next);
+            var rows = Array.prototype.slice.call(tbody.querySelectorAll("tr"));
+            rows.sort(function (left, right) {
+              var a = left.cells[index].textContent.trim().toLowerCase();
+              var b = right.cells[index].textContent.trim().toLowerCase();
+              if (a < b) return next === "asc" ? -1 : 1;
+              if (a > b) return next === "asc" ? 1 : -1;
+              return 0;
+            });
+            rows.forEach(function (row) { tbody.appendChild(row); });
           });
-          button.setAttribute("data-dir", next);
-          var rows = Array.prototype.slice.call(tbody.querySelectorAll("tr"));
+        });
+      }
+
+      document.querySelectorAll("table[data-hull-table]").forEach(function (table) {
+        var body = table.querySelector("tbody");
+        var keyButtons = table.querySelectorAll("button[data-hull-sort]");
+        var dirButtons = table.querySelectorAll("button[data-hull-dir]");
+        var mode = "name";
+        var direction = "asc";
+
+        function nameOrder(left, right) {
+          var nameLeft = (left.getAttribute("data-name") || "").toLowerCase();
+          var nameRight = (right.getAttribute("data-name") || "").toLowerCase();
+          if (nameLeft < nameRight) return -1;
+          if (nameLeft > nameRight) return 1;
+          return 0;
+        }
+
+        function apply() {
+          var rows = Array.prototype.slice.call(body.querySelectorAll("tr"));
           rows.sort(function (left, right) {
-            var a = left.cells[index].textContent.trim().toLowerCase();
-            var b = right.cells[index].textContent.trim().toLowerCase();
-            if (a < b) return next === "asc" ? -1 : 1;
-            if (a > b) return next === "asc" ? 1 : -1;
-            return 0;
+            if (mode === "techlevel") {
+              var levelLeft = Number(left.getAttribute("data-techlevel"));
+              var levelRight = Number(right.getAttribute("data-techlevel"));
+              if (levelLeft !== levelRight) {
+                var byLevel = levelLeft - levelRight;
+                return direction === "asc" ? byLevel : -byLevel;
+              }
+              return nameOrder(left, right);
+            }
+            var byName = nameOrder(left, right);
+            return direction === "asc" ? byName : -byName;
           });
-          rows.forEach(function (row) { tbody.appendChild(row); });
+          rows.forEach(function (row) { body.appendChild(row); });
+          keyButtons.forEach(function (button) {
+            var selected = button.getAttribute("data-hull-sort") === mode;
+            button.setAttribute("aria-pressed", selected ? "true" : "false");
+          });
+          dirButtons.forEach(function (button) {
+            var selected = button.getAttribute("data-hull-dir") === direction;
+            button.setAttribute("aria-pressed", selected ? "true" : "false");
+          });
+        }
+
+        keyButtons.forEach(function (button) {
+          button.addEventListener("click", function () {
+            mode = button.getAttribute("data-hull-sort");
+            apply();
+          });
+        });
+        dirButtons.forEach(function (button) {
+          button.addEventListener("click", function () {
+            direction = button.getAttribute("data-hull-dir");
+            apply();
+          });
         });
       });
     })();

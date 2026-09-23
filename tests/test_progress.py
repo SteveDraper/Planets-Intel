@@ -41,7 +41,13 @@ def test_fetch_progress(monkeypatch, capsys):
         if path == "/static/all":
             return {
                 "hulls": [
-                    {"id": 14, "name": "Neutronic Fuel Carrier", "beams": 0, "advantage": 20}
+                    {
+                        "id": 14,
+                        "name": "Neutronic Fuel Carrier",
+                        "beams": 0,
+                        "advantage": 20,
+                        "techlevel": 3,
+                    }
                 ],
                 "advantages": [{"id": 25, "name": "Build Fighters", "value": 100}],
             }

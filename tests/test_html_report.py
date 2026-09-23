@@ -17,6 +17,7 @@ REPORT = {
                     "id": 14,
                     "name": "Neutronic Fuel Carrier",
                     "icon": "https://mobile.planets.nu/img/hulls/14.png",
+                    "techlevel": 3,
                 }
             ],
             "advantages": [
@@ -55,6 +56,21 @@ def test_home_teams_and_detail_viewports():
     assert 'id="player-2"' in page
     detail = page.split('id="player-2"', 1)[1].split('id="player-7"', 1)[0]
     assert detail.index("Campaign points used") < detail.index("Hulls")
+    assert 'data-hull-sort="name"' in detail
+    assert 'data-hull-sort="techlevel"' in detail
+    assert 'data-hull-dir="asc" aria-pressed="true"' in detail
+    assert 'aria-label="Ascending"' in detail
+    assert 'aria-label="Descending"' in detail
+    assert ">Ascending<" not in detail
+    assert ">Descending<" not in detail
+    assert 'd="M8 13V3M4.5 6.5 8 3l3.5 3.5"' in detail
+    assert 'd="M8 3v10M4.5 9.5 8 13l3.5-3.5"' in detail
+    assert 'aria-pressed="true"' in detail
+    assert 'data-techlevel="3"' in detail
+    advantages = detail.split(">Advantages<", 1)[1]
+    assert "data-hull-sort" not in advantages
+    assert "data-hull-dir" not in advantages
+    assert "data-techlevel" not in advantages
     assert ">240<" in detail.split("Hulls", 1)[0]
     empty = page.split('id="player-7"', 1)[1]
     assert "Campaign points used" in empty.split("Hulls", 1)[0]

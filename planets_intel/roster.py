@@ -53,6 +53,7 @@ def build_roster(
             hulls,
             _hull_icon,
             "advantage",
+            ("techlevel",),
         )
         active_advantages, advantage_points = _active_items(
             None if detail is None else detail.get("activeadvantages"),
@@ -89,6 +90,7 @@ def _active_items(
     catalog: dict[int, dict],
     icon_for,
     point_field: str,
+    copy_fields: tuple[str, ...] = (),
 ) -> tuple[list[dict], int]:
     items = []
     points = 0
@@ -105,13 +107,14 @@ def _active_items(
         if record is None:
             raise RosterError(f"static catalog has no id {item_id}")
         points += record[point_field]
-        items.append(
-            {
-                "id": item_id,
-                "name": record["name"],
-                "icon": icon_for(record),
-            }
-        )
+        item = {
+            "id": item_id,
+            "name": record["name"],
+            "icon": icon_for(record),
+        }
+        for field in copy_fields:
+            item[field] = record[field]
+        items.append(item)
     items.sort(key=lambda item: item["name"].casefold())
     return items, points
 

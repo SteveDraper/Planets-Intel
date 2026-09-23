@@ -45,8 +45,20 @@ def test_league_team_and_active_items():
             10: {"id": 10, "activehulls": "15,14,", "activeadvantages": "25,30,"},
         },
         hulls={
-            14: {"id": 14, "name": "Neutronic Fuel Carrier", "beams": 0, "advantage": 20},
-            15: {"id": 15, "name": "Large Deep Space Freighter", "beams": 0, "advantage": 160},
+            14: {
+                "id": 14,
+                "name": "Neutronic Fuel Carrier",
+                "beams": 0,
+                "advantage": 20,
+                "techlevel": 3,
+            },
+            15: {
+                "id": 15,
+                "name": "Large Deep Space Freighter",
+                "beams": 0,
+                "advantage": 160,
+                "techlevel": 2,
+            },
         },
         advantages={
             25: {"id": 25, "name": "Build Fighters", "value": 100},
@@ -63,6 +75,8 @@ def test_league_team_and_active_items():
         "Neutronic Fuel Carrier",
     ]
     assert by_slot[2]["hulls"][0]["icon"] == "https://mobile.planets.nu/img/hulls/15.png"
+    assert [hull["techlevel"] for hull in by_slot[2]["hulls"]] == [2, 3]
+    assert "techlevel" not in by_slot[2]["advantages"][0]
     assert [item["name"] for item in by_slot[2]["advantages"]] == [
         "alchemy",
         "Build Fighters",
