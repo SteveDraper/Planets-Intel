@@ -11,6 +11,7 @@ REPORT = {
             "race": "The Lizard Alliance",
             "team": None,
             "officer_id": 10,
+            "campaign_points": 240,
             "hulls": [
                 {
                     "id": 14,
@@ -32,6 +33,7 @@ REPORT = {
             "race": "The Crystal Confederation",
             "team": "RISK",
             "officer_id": None,
+            "campaign_points": 0,
             "hulls": [],
             "advantages": [],
         },
@@ -51,6 +53,12 @@ def test_home_teams_and_detail_viewports():
     assert "RISK" in page
     assert "&lt;None&gt;" in page
     assert 'id="player-2"' in page
+    detail = page.split('id="player-2"', 1)[1].split('id="player-7"', 1)[0]
+    assert detail.index("Campaign points used") < detail.index("Hulls")
+    assert ">240<" in detail.split("Hulls", 1)[0]
+    empty = page.split('id="player-7"', 1)[1]
+    assert "Campaign points used" in empty.split("Hulls", 1)[0]
+    assert ">0<" in empty.split("Hulls", 1)[0]
     assert "Neutronic Fuel Carrier" in page
     assert "Build Fighters" in page
     assert "Hulls" in page

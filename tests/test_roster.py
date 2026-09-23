@@ -45,12 +45,12 @@ def test_league_team_and_active_items():
             10: {"id": 10, "activehulls": "15,14,", "activeadvantages": "25,30,"},
         },
         hulls={
-            14: {"id": 14, "name": "Neutronic Fuel Carrier", "beams": 0},
-            15: {"id": 15, "name": "Large Deep Space Freighter", "beams": 0},
+            14: {"id": 14, "name": "Neutronic Fuel Carrier", "beams": 0, "advantage": 20},
+            15: {"id": 15, "name": "Large Deep Space Freighter", "beams": 0, "advantage": 160},
         },
         advantages={
-            25: {"id": 25, "name": "Build Fighters"},
-            30: {"id": 30, "name": "alchemy"},
+            25: {"id": 25, "name": "Build Fighters", "value": 100},
+            30: {"id": 30, "name": "alchemy", "value": -40},
         },
     )
     by_slot = {player["slot"]: player for player in report["players"]}
@@ -67,7 +67,9 @@ def test_league_team_and_active_items():
         "alchemy",
         "Build Fighters",
     ]
+    assert by_slot[2]["campaign_points"] == 240
     assert by_slot[7]["team"] is None
     assert by_slot[7]["officer_id"] is None
     assert by_slot[7]["hulls"] == []
     assert by_slot[7]["advantages"] == []
+    assert by_slot[7]["campaign_points"] == 0

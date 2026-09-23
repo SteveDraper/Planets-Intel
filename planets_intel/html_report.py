@@ -129,6 +129,7 @@ def _detail(player: dict) -> str:
     return f"""    <section id="player-{slot}" data-viewport="detail" aria-label="{html.escape(player["name"], quote=True)}" hidden class="mx-auto w-full max-w-5xl px-4 py-6">
       <p><a href="#home" class="text-sm text-[#00ffff] no-underline">Back</a></p>
       <h1 class="mt-4 text-[17px] font-normal text-[#cceeee]">{html.escape(heading)}</h1>
+      <p class="mt-4 text-sm text-[rgba(200,200,200,0.75)]">Campaign points used <b class="font-normal text-[#00ffff]">{player["campaign_points"]}</b></p>
       <div class="mt-4 grid gap-4">
         {_item_table("Hulls", player["hulls"])}
         {_item_table("Advantages", player["advantages"])}

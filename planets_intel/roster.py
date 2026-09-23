@@ -47,6 +47,19 @@ def build_roster(
             starter["raceid"],
         )
         detail = None if officer is None else officer_details[officer["id"]]
+        # Officer pages total campaign points as hull.advantage + advantage.value.
+        active_hulls, hull_points = _active_items(
+            None if detail is None else detail.get("activehulls"),
+            hulls,
+            _hull_icon,
+            "advantage",
+        )
+        active_advantages, advantage_points = _active_items(
+            None if detail is None else detail.get("activeadvantages"),
+            advantages,
+            _advantage_icon,
+            "value",
+        )
         players.append(
             {
                 "slot": starter["slot"],
@@ -54,16 +67,9 @@ def build_roster(
                 "race": starter["race"],
                 "team": league_team(account_payload.get("playergroups")),
                 "officer_id": None if officer is None else officer["id"],
-                "hulls": _active_items(
-                    None if detail is None else detail.get("activehulls"),
-                    hulls,
-                    _hull_icon,
-                ),
-                "advantages": _active_items(
-                    None if detail is None else detail.get("activeadvantages"),
-                    advantages,
-                    _advantage_icon,
-                ),
+                "hulls": active_hulls,
+                "advantages": active_advantages,
+                "campaign_points": hull_points + advantage_points,
             }
         )
     return {"game": game_record(loadinfo), "players": players}
@@ -78,8 +84,14 @@ def _officer_for_race(officers: list[dict], raceid: int | None) -> dict | None:
     return None
 
 
-def _active_items(csv: str | None, catalog: dict[int, dict], icon_for) -> list[dict]:
+def _active_items(
+    csv: str | None,
+    catalog: dict[int, dict],
+    icon_for,
+    point_field: str,
+) -> tuple[list[dict], int]:
     items = []
+    points = 0
     seen: set[int] = set()
     for raw in (csv or "").split(","):
         token = raw.strip()
@@ -92,6 +104,7 @@ def _active_items(csv: str | None, catalog: dict[int, dict], icon_for) -> list[d
         record = catalog.get(item_id)
         if record is None:
             raise RosterError(f"static catalog has no id {item_id}")
+        points += record[point_field]
         items.append(
             {
                 "id": item_id,
@@ -100,7 +113,7 @@ def _active_items(csv: str | None, catalog: dict[int, dict], icon_for) -> list[d
             }
         )
     items.sort(key=lambda item: item["name"].casefold())
-    return items
+    return items, points
 
 
 def _hull_icon(hull: dict) -> str:
