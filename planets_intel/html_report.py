@@ -178,6 +178,43 @@ def _hull_sort_control() -> str:
             </span>"""
 
 
+_STATE_LABEL = {
+    "added": "Added",
+    "same": "Same as default",
+    "removed": "Removed",
+}
+_ROW_EDGE = "border-b border-[#222]"
+_ROW = (
+    _ROW_EDGE
+    + " hover:bg-[linear-gradient(to_bottom,rgba(64,80,80,0.25),rgba(34,40,40,0.25))]"
+)
+_ROW_TINT = {
+    "added": (
+        _ROW_EDGE
+        + " bg-[rgba(70,130,80,0.35)] hover:bg-[rgba(80,150,90,0.45)]"
+    ),
+    "removed": (
+        _ROW_EDGE
+        + " bg-[rgba(150,60,60,0.40)] hover:bg-[rgba(170,70,70,0.50)]"
+    ),
+    "same": _ROW,
+}
+
+
+def _state_mark(state: str) -> str:
+    """Plus or minus before the item icon. A default match has no mark."""
+    path = {"added": "M8 2v12M2 8h12", "removed": "M3 8h10"}.get(state)
+    if path is None:
+        return ""
+    return (
+        '<svg viewBox="0 0 16 16" aria-hidden="true" '
+        'class="mr-2.5 inline-block h-4 w-4 shrink-0 text-[rgba(200,200,200,0.75)]" '
+        'fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" '
+        'stroke-linejoin="round">'
+        f'<path d="{path}"/></svg>'
+    )
+
+
 def _arrow_icon(direction: str) -> str:
     path = {
         "up": "M8 13V3M4.5 6.5 8 3l3.5 3.5",
@@ -199,13 +236,14 @@ def _item_row(item: dict, hull_sort: bool = False) -> str:
             f'<img src="{html.escape(icon, quote=True)}" alt="" '
             'class="mr-2.5 h-[60px] w-[60px] rounded-[5px] bg-black object-contain">'
         )
-    attrs = ""
+    state = item["default_state"]
+    attrs = f' aria-label="{html.escape(_STATE_LABEL[state], quote=True)}"'
     if hull_sort:
         name = html.escape(item["name"], quote=True)
         level = html.escape(str(item["techlevel"]), quote=True)
-        attrs = f' data-name="{name}" data-techlevel="{level}"'
-    return f"""              <tr{attrs} class="border-b border-[#222] hover:bg-[linear-gradient(to_bottom,rgba(64,80,80,0.25),rgba(34,40,40,0.25))]">
-                <td class="px-5 py-3"><span class="flex items-center">{image}<b class="font-normal text-[#00ffff]">{html.escape(item["name"])}</b></span></td>
+        attrs += f' data-name="{name}" data-techlevel="{level}"'
+    return f"""              <tr{attrs} class="{_ROW_TINT[state]}">
+                <td class="px-5 py-3"><span class="flex items-center">{_state_mark(state)}{image}<b class="font-normal text-[#00ffff]">{html.escape(item["name"])}</b></span></td>
               </tr>"""
 
 

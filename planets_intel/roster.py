@@ -36,27 +36,32 @@ def build_roster(
     officer_details: dict[int, dict],
     hulls: dict[int, dict],
     advantages: dict[int, dict],
+    races: dict[int, dict],
 ) -> dict:
     """Assemble the JSON report. ``accounts`` is keyed by starter username."""
     players = []
     for starter in select_starters(loadinfo):
         account_payload = accounts[starter["name"]]
         account = account_payload["account"]
+        raceid = starter["raceid"]
         officer = _officer_for_race(
             officers_by_account.get(account["id"], []),
-            starter["raceid"],
+            raceid,
         )
         detail = None if officer is None else officer_details[officer["id"]]
         # Officer pages total campaign points as hull.advantage + advantage.value.
-        active_hulls, hull_points = _active_items(
+        # Race defaults are /static/all races[].basehulls and baseadvantages.
+        active_hulls, hull_points = _union_items(
             None if detail is None else detail.get("activehulls"),
+            _race_csv(races, raceid, "basehulls"),
             hulls,
             _hull_icon,
             "advantage",
             ("techlevel",),
         )
-        active_advantages, advantage_points = _active_items(
+        active_advantages, advantage_points = _union_items(
             None if detail is None else detail.get("activeadvantages"),
+            _race_csv(races, raceid, "baseadvantages"),
             advantages,
             _advantage_icon,
             "value",
@@ -85,32 +90,57 @@ def _officer_for_race(officers: list[dict], raceid: int | None) -> dict | None:
     return None
 
 
-def _active_items(
-    csv: str | None,
+def _race_csv(races: dict[int, dict], raceid: int | None, field: str) -> str:
+    if raceid is None:
+        return ""
+    race = races.get(raceid)
+    if race is None:
+        raise RosterError(f"static races has no id {raceid}")
+    return race.get(field) or ""
+
+
+def _id_set(csv: str | None) -> set[int]:
+    ids: set[int] = set()
+    for raw in (csv or "").split(","):
+        token = raw.strip()
+        if token:
+            ids.add(int(token))
+    return ids
+
+
+def _default_state(item_id: int, active_ids: set[int], default_ids: set[int]) -> str:
+    if item_id in active_ids and item_id in default_ids:
+        return "same"
+    if item_id in active_ids:
+        return "added"
+    return "removed"
+
+
+def _union_items(
+    active_csv: str | None,
+    default_csv: str | None,
     catalog: dict[int, dict],
     icon_for,
     point_field: str,
     copy_fields: tuple[str, ...] = (),
 ) -> tuple[list[dict], int]:
+    """Active ids plus that race's defaults. Owned-only ids are left out."""
+    active_ids = _id_set(active_csv)
+    default_ids = _id_set(default_csv)
     items = []
     points = 0
-    seen: set[int] = set()
-    for raw in (csv or "").split(","):
-        token = raw.strip()
-        if not token:
-            continue
-        item_id = int(token)
-        if item_id in seen:
-            continue
-        seen.add(item_id)
+    for item_id in active_ids | default_ids:
         record = catalog.get(item_id)
         if record is None:
             raise RosterError(f"static catalog has no id {item_id}")
-        points += record[point_field]
+        state = _default_state(item_id, active_ids, default_ids)
+        if state != "removed":
+            points += record[point_field]
         item = {
             "id": item_id,
             "name": record["name"],
             "icon": icon_for(record),
+            "default_state": state,
         }
         for field in copy_fields:
             item[field] = record[field]

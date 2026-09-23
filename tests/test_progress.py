@@ -50,6 +50,9 @@ def test_fetch_progress(monkeypatch, capsys):
                     }
                 ],
                 "advantages": [{"id": 25, "name": "Build Fighters", "value": 100}],
+                "races": [
+                    {"id": 1, "basehulls": "14,", "baseadvantages": "25,"},
+                ],
             }
         if path == "/account/loadprofile":
             return {"success": True, "account": {"id": 7}, "playergroups": []}

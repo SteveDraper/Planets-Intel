@@ -20,6 +20,7 @@ def fetch_roster(game_id: int) -> dict:
     static = get_json("/static/all", {})
     hulls = {hull["id"]: hull for hull in static["hulls"]}
     advantages = {advantage["id"]: advantage for advantage in static["advantages"]}
+    races = {race["id"]: race for race in static["races"]}
 
     starters = select_starters(loadinfo)
     accounts: dict[str, dict] = {}
@@ -55,6 +56,7 @@ def fetch_roster(game_id: int) -> dict:
         officer_details,
         hulls,
         advantages,
+        races,
     )
 
 

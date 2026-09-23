@@ -18,6 +18,7 @@ REPORT = {
                     "name": "Neutronic Fuel Carrier",
                     "icon": "https://mobile.planets.nu/img/hulls/14.png",
                     "techlevel": 3,
+                    "default_state": "added",
                 }
             ],
             "advantages": [
@@ -25,7 +26,14 @@ REPORT = {
                     "id": 25,
                     "name": "Build Fighters",
                     "icon": "data:image/png;base64,aaaa",
-                }
+                    "default_state": "same",
+                },
+                {
+                    "id": 31,
+                    "name": "Web Mines",
+                    "icon": None,
+                    "default_state": "removed",
+                },
             ],
         },
         {
@@ -40,6 +48,13 @@ REPORT = {
         },
     ],
 }
+
+
+def _row_containing(page: str, name: str) -> str:
+    for chunk in page.split("<tr"):
+        if name in chunk:
+            return chunk
+    raise AssertionError(name)
 
 
 def test_home_teams_and_detail_viewports():
@@ -67,6 +82,19 @@ def test_home_teams_and_detail_viewports():
     assert 'd="M8 3v10M4.5 9.5 8 13l3.5-3.5"' in detail
     assert 'aria-pressed="true"' in detail
     assert 'data-techlevel="3"' in detail
+    assert 'aria-label="Added"' in detail.split(">Advantages<", 1)[0]
+    assert 'aria-label="Same as default"' in detail.split(">Advantages<", 1)[1]
+    assert 'd="M8 2v12M2 8h12"' in detail
+    assert "M3.5 8.5" not in detail
+    added = _row_containing(detail, "Neutronic Fuel Carrier")
+    assert 'd="M8 2v12M2 8h12"' in added
+    assert "bg-[rgba(70,130,80,0.35)]" in added
+    same = _row_containing(detail, "Build Fighters")
+    assert "<svg" not in same
+    assert "bg-[rgba(" not in same
+    removed = _row_containing(detail, "Web Mines")
+    assert 'd="M3 8h10"' in removed
+    assert "bg-[rgba(150,60,60,0.40)]" in removed
     advantages = detail.split(">Advantages<", 1)[1]
     assert "data-hull-sort" not in advantages
     assert "data-hull-dir" not in advantages
